@@ -19,8 +19,8 @@ git filter-repo --path calico/
 cd -
 cd docs
 git remote add calico ../calico
-git fetch calico --tags
-git merge --allow-unrelated-histories calico/master
+git fetch calico
+git merge --allow-unrelated-histories --no-edit calico/master
 git remote remove calico
 cd -
 
@@ -32,8 +32,8 @@ git filter-repo --path calico/ --path-rename calico/:calico-enterprise/
 cd -
 cd docs
 git remote add calico-private ../calico-private
-git fetch calico-private --tags
-git merge --allow-unrelated-histories calico-private/master
+git fetch calico-private
+git merge --allow-unrelated-histories --no-edit calico-private/master
 git remote remove calico-private
 cd -
 
@@ -45,7 +45,7 @@ git filter-repo --to-subdirectory-filter calico-cloud/
 cd -
 cd docs
 git remote add calico-cloud ../calico-cloud
-git fetch calico-cloud --tags
-git merge --allow-unrelated-histories calico-cloud/master
+git fetch calico-cloud
+git merge --allow-unrelated-histories --no-edit calico-cloud/master
 git remote remove calico-cloud
 cd -
