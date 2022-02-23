@@ -18,10 +18,8 @@ function merge() {
   home
 }
 
-# set pwd to this script location
-home
-
 # create unified docs repository
+home
 rm -rf ./docs
 git init docs
 
@@ -37,7 +35,7 @@ rm -rf ./calico-private/
 git clone git@github.com:tigera/calico-private.git
 cd calico-private
 git filter-repo --path calico/ --path-rename calico/:calico-enterprise/
-git filter-repo --path-glob "**/*.md"
+git filter-repo --path-glob "**/*.md" --path _includes/
 merge calico-private
 
 # process cloud
@@ -45,5 +43,5 @@ rm -rf ./calico-cloud/
 git clone git@github.com:tigera/calico-cloud.git
 cd calico-cloud
 git filter-repo --to-subdirectory-filter calico-cloud/
-git filter-repo --path-glob "**/*.md"
+git filter-repo --path-glob "**/*.md" --path _includes/
 merge calico-cloud
