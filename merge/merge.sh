@@ -27,7 +27,7 @@ git init docs
 rm -rf ./calico/
 git clone git@github.com:projectcalico/calico.git
 cd calico 
-git filter-repo --path calico/ --path-rename calico/:
+git filter-repo --path calico/ --path-rename calico/: --path-rename _data/versions.yml:calico/_data/versions.yml
 merge calico
 
 # process enterprise
@@ -35,7 +35,7 @@ rm -rf ./calico-private/
 git clone git@github.com:tigera/calico-private.git
 cd calico-private
 git filter-repo --path calico/ --path-rename calico/:calico-enterprise/
-git filter-repo --path-glob "**/*.md" --path _includes/
+git filter-repo --path-glob "**/*.md" --path _includes/ --path _data/
 merge calico-private
 
 # process cloud
@@ -43,5 +43,5 @@ rm -rf ./calico-cloud/
 git clone git@github.com:tigera/calico-cloud.git
 cd calico-cloud
 git filter-repo --to-subdirectory-filter calico-cloud/
-git filter-repo --path-glob "**/*.md" --path _includes/
+git filter-repo --path-glob "**/*.md" --path _includes/ --path _data/
 merge calico-cloud
