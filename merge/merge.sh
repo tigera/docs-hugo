@@ -32,8 +32,9 @@ function fixup() {
           --path-rename $name/_layouts/:_layouts/$name/ \
           --path-rename $name/_data/:_data/$name/ \
           --path-rename $name/_sass/:_sass/$name/
-  find . -type f -print0 | xargs -0 sed -r -i 's/\{%\s+include\s+\/(.*)\s+%}/{% include \1 %}/g'
-  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s+include\s+(.*)\s+%}/{% include ${name}\/\1 %}/g"
+  find . -type f -print0 | xargs -0 sed -r -i 's/\{%\s*include\s+\/(.*)\s*%}/{% include \1 %}/g'
+  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include\s+(.*)\s*%}/{% include ${name}\/\1 %}/g"
+  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include_cached\s+(.*)\s*%}/{% include ${name}\/\1 %}/g"
   git add .
   git commit -m "redirect includes to global _includes"
 }
@@ -50,19 +51,6 @@ cd calico
 git filter-repo --path calico/ --path-rename calico/:
 mkdir -p calico/_data
 cp _data/versions.yml calico/_data/versions.yml
-cat <<EOF >./Gemfile
-# frozen_string_literal: true
-source "https://rubygems.org"
-git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
-gem 'jekyll', '~>4.0.0'
-group :jekyll_plugins do
-  gem 'jekyll-redirect-from'
-  gem 'jekyll-seo-tag'
-  gem 'jekyll-sitemap'
-  gem 'jekyll-include-cache'
-end
-EOF
-sed -r -i "s/\s+- jekyll-sitemap/  - jekyll-sitemap\n  - jekyll-include-cache/g" ./_config.yml
 git add .
 git commit -m "copy versions.yml"
 merge calico
