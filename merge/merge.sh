@@ -62,7 +62,7 @@ group :jekyll_plugins do
   gem 'jekyll-include-cache'
 end
 EOF
-sed -r -i "s/\s+- jekyll-sitemap/  - jekyll-sitemap\n  - jekyll-include-cache\n/g" ./_config.yml
+sed -r -i "s/\s+- jekyll-sitemap/  - jekyll-sitemap\n  - jekyll-include-cache/g" ./_config.yml
 git add .
 git commit -m "copy versions.yml"
 merge calico
