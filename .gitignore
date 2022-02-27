@@ -5,7 +5,7 @@ _site/
 
 
 merge/calico/
-merge/calico-private/
+merge/calico-enterprise/
 merge/calico-cloud/
 merge/docs/
 merge/libcalico-go
