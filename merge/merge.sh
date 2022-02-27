@@ -42,7 +42,16 @@ git clone git@github.com:tigera/calico-private.git
 cd calico-private
 cp -r libcalico-go/* ../libcalico-go
 git filter-repo --path calico/ --path-rename calico/:calico-enterprise/
-git filter-repo --path-glob "**/*.md" --path calico-enterprise/_includes/ --path calico-enterprise/_data/
+git filter-repo \
+				--path-glob "**/*.md" \
+				--path calico-enterprise/_includes/ \
+				--path calico-enterprise/_data/ \
+				--path-rename calico-enterprise/_includes/:_includes/calico-enterprise/ \
+				--path-rename calico-enterprise/_data/:_data/calico-enterprise/
+find . -type f -print0 | xargs -0 sed -i 's/{% *include *\/\(.*\) %}/{% include calico-enterprise\/\1 %}/g'
+find . -type f -print0 | xargs -0 sed -i 's/{% *include *\(.*\) %}/{% include calico-enterprise\/\1 %}/g'
+git add .
+git commit -m "redirect includes to global _includes"
 merge calico-private
 
 # process cloud
@@ -50,5 +59,14 @@ rm -rf ./calico-cloud/
 git clone git@github.com:tigera/calico-cloud.git
 cd calico-cloud
 git filter-repo --to-subdirectory-filter calico-cloud/
-git filter-repo --path-glob "**/*.md" --path calico-cloud/_includes/ --path calico-cloud/_data/
+git filter-repo \
+				--path-glob "**/*.md" \
+				--path calico-cloud/_includes/ \
+				--path calico-cloud/_data/ \
+				--path-rename calico-cloud/_includes/:_includes/calico-cloud/ \
+				--path-rename calico-cloud/_data/:_data/calico-cloud/
+#find . -type f -print0 | xargs -0 sed -i 's/{% *include *\/\(.*\) %}/{% include calico-cloud\/\1 %}/g'
+#find . -type f -print0 | xargs -0 sed -i 's/{% *include *\(.*\) %}/{% include calico-cloud\/\1 %}/g'
+git add .
+git commit -m "redirect includes to global _includes"
 merge calico-cloud
