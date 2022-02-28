@@ -3,9 +3,3 @@ _site/
 .jekyll-cache/
 .jekyll-metadata
 
-
-merge/calico/
-merge/calico-enterprise/
-merge/calico-cloud/
-merge/docs/
-merge/libcalico-go
