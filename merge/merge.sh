@@ -146,7 +146,7 @@ if [[ "$type" == "hugo" ]]; then
   cd ..
   git remote add hugo merge/hugo
   git fetch hugo
-  git merge --allow-unrelated-histories --no-edit hugo/master
+  git merge --squash --allow-unrelated-histories --no-edit hugo/master
   git remote remove hugo
   home
 elif [[ "$type" == "jekyll" ]]; then
