@@ -80,6 +80,8 @@ function create_jekyll() {
 
 function hugo_fixup() {
   local name=$1
+  # remove charts for now...
+  git filter-repo --path $name/_includes/charts/ --invert-paths
   git filter-repo \
     --path-glob "**/*.md" \
     --path $name/_includes/ \
