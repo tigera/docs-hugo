@@ -1,5 +1,6 @@
 calico/
 calico-enterprise/
 calico-cloud/
-docs/
 libcalico-go/
+hugo/
+jekyll/
