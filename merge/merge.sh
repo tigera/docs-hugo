@@ -34,9 +34,9 @@ function jekyll_fixup() {
           --path-rename $name/_layouts/:_layouts/$name/ \
           --path-rename $name/_data/:_data/$name/ \
           --path-rename $name/_sass/:_sass/$name/
-  find . -type f -print0 | xargs -0 sed -r -i 's/\{%\s*include\s+\/(.*)\s*%}/{% include \1 %}/g'
-  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include\s+(.*)\s*%}/{% include ${name}\/\1 %}/g"
-  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include_cached\s+(.*)\s*%}/{% include ${name}\/\1 %}/g"
+  find . -type f -print0 | xargs -0 sed -r -i 's/\{%\s*include\s+\/(.*)%}/{% include \1 %}/g'
+  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include\s+(.*)%}/{% include ${name}\/\1 %}/g"
+  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include_cached\s+(.*)%}/{% include ${name}\/\1 %}/g"
   git add .
   git commit -m "update content for jekyll"
 }
@@ -103,9 +103,9 @@ function hugo_fixup() {
   else:
     return filename
   '
-  find . -type f -print0 | xargs -0 sed -r -i 's/\{%\s*include\s+\/(.*)\s*%}/{{ partial \1 }}/g'
-  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include\s+(.*)\s*%}/{{ partial ${name}\/\1 }}/g"
-  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include_cached\s+(.*)\s*%}/{{ partial ${name}\/\1 }}/g"
+  find . -type f -print0 | xargs -0 sed -r -i 's/\{%\s*include\s+\/(.*)%}/{{ partial \1 }}/g'
+  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include\s+(.*)%}/{{ partial ${name}\/\1 }}/g"
+  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include_cached\s+(.*)%}/{{ partial ${name}\/\1 }}/g"
   git add .
   git commit -m "updating content for hugo"
 }
