@@ -146,6 +146,7 @@ if [[ "$type" == "hugo" ]]; then
   create_hugo
   home
   cd ..
+  git remote remove hugo || true
   git remote add hugo merge/hugo
   git fetch hugo
   git merge --squash --allow-unrelated-histories --no-edit hugo/master
