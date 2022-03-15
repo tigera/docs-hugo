@@ -103,9 +103,9 @@ function hugo_fixup() {
   else:
     return filename
   '
-  find . -type f -print0 | xargs -0 sed -r -i 's/\{%\s*include\s+\/(.*)%}/{{ partial \1 }}/g'
-  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include\s+(.*)%}/{{ partial ${name}\/\1 }}/g"
-  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include_cached\s+(.*)%}/{{ partial ${name}\/\1 }}/g"
+  find . -type f -print0 | xargs -0 sed -r -i 's/\{%\s*include\s+\/(.+?)%}/{{ partial \1 }}/g'
+  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include\s+(.+?)%}/{{ partial ${name}\/\1 }}/g"
+  find . -type f -print0 | xargs -0 sed -r -i "s/\{%\s*include_cached\s+(.+?)%}/{{ partial ${name}\/\1 }}/g"
   git add .
   git commit -m "updating content for hugo"
 }
