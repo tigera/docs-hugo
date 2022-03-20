@@ -84,10 +84,10 @@ function hugo_fixup() {
   git filter-repo --path $name/_includes/charts/ --invert-paths
   git filter-repo \
     --path-glob "**/*.md" \
-    --path $name/_includes/ \
     --path $name/_data/ \
-    --path-rename $name/_includes/:layouts/$name/ \
+    --path $name/_includes/ \
     --path-rename $name/_data/:data/$name/ \
+    --path-rename $name/_includes/:layouts/$name/ \
     --filename-callback '
   if filename is None:
     return filename
@@ -103,9 +103,21 @@ function hugo_fixup() {
   else:
     return filename
   '
-  find . -type f -print0 | xargs -0 perl -pi -e "s/\{%\s*include\s+\/(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
-  find . -type f -print0 | xargs -0 perl -pi -e "s/\{%\s*include\s+(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
-  find . -type f -print0 | xargs -0 perl -pi -e "s/\{%\s*include_cached\s+(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*include\s+\/(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*include\s+(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*include_cached\s+(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*comment\s*%}(.*?){%\s*endcomment\s*%}/{{< comment >}}\1{{< /comment >}}/gs"
+
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%-(.*?)-%}/{{\/\* -TODO\[merge\]-: \1 \*\/}}/gs"
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%-(.*?)%}/{{\/\* -TODO\[merge\]: \1 \*\/}}/gs"
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%(.*?)-%}/{{\/\* TODO\[merge\]-: \1 \*\/}}/gs"
+
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{-(.*?)-}}/{{\/\* -TODO\[merge\]-: \1 \*\/}}/gs"
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{-(.*?)}}/{{\/\* -TODO\[merge\]: \1 \*\/}}/gs"
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{(.*?)-}}/{{\/\* TODO\[merge\]-: \1 \*\/}}/gs"
+
+  # capture all else which is not a comment or shortcode
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{([^\/<%])(\s*)(.*?)\s*}}/{{\/\* TODO\[merge\]: \1\2\3 \*\/}}/gs"
   git add .
   git commit -m "updating content for hugo"
 }
