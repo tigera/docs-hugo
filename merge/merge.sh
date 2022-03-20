@@ -80,6 +80,7 @@ function create_jekyll() {
 
 function hugo_fixup() {
   local name=$1
+  local displayName=$2
   # remove charts for now...
   git filter-repo --path $name/_includes/charts/ --invert-paths
   git filter-repo \
@@ -106,7 +107,8 @@ function hugo_fixup() {
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*include\s+\/(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*include\s+(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*include_cached\s+(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
-  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*comment\s*%}(.*?){%\s*endcomment\s*%}/{{< comment >}}\1{{< /comment >}}/gs"
+  find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*comment\s*%}(.*?){%\s*endcomment\s*%}/{{< comment >}}\${1}{{< \/comment >}}/gs"
+  find ./layouts -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*comment\s*%}(.*?){%\s*endcomment\s*%}/{{\/*\${1}*\/}}/gs"
 
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%-(.*?)-%}/{{\/\* -TODO\[merge\]-: \1 \*\/}}/gs"
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%-(.*?)%}/{{\/\* -TODO\[merge\]: \1 \*\/}}/gs"
@@ -118,6 +120,25 @@ function hugo_fixup() {
 
   # capture all else which is not a comment or shortcode
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{([^\/<%])(\s*)(.*?)\s*}}/{{\/\* TODO\[merge\]: \1\2\3 \*\/}}/gs"
+
+  # convert illegal front-matter that hugo won't allow
+  find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -pi -e "s/description:(.*?)\{\{\/\* TODO\[merge\]: site\.prodname \*\/}}/description:\${1}${displayName}/"
+
+  # make sure each top-level dir has an _index.md with cascading front-matter
+  if [[ -f "./content/en/docs/$name/_index.md" ]]; then
+    perl -0777 -pi -e "s/^---\$(.*?)^---$/\n---\${1}cascade:\n  prodname: \"${displayName}\"\n---\n/gsm" "./content/en/docs/$name/_index.md"
+  else
+    cat >"./content/en/docs/$name/_index.md" <<EOF
+---
+cascade:
+  prodname: "${displayName}"
+---
+EOF
+  fi
+
+  find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*site\.prodname\s*\*\/}}/{{< param prodname >}}/g"
+  find ./layouts -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*site\.prodname\s*\*\/}}/{{ .Params.prodname }}/g"
+
   git add .
   git commit -m "updating content for hugo"
 }
@@ -133,7 +154,7 @@ function create_hugo() {
   git clone git@github.com:projectcalico/calico.git
   cd calico
   git filter-repo --path calico/
-  hugo_fixup calico
+  hugo_fixup calico "Calico"
   merge hugo calico
 
   # process enterprise
@@ -141,7 +162,7 @@ function create_hugo() {
   git clone git@github.com:tigera/calico-private.git calico-enterprise
   cd calico-enterprise
   git filter-repo --path calico/ --path-rename calico/:calico-enterprise/
-  hugo_fixup calico-enterprise
+  hugo_fixup calico-enterprise "Calico Enterprise"
   merge hugo calico-enterprise
 
   # process cloud
@@ -149,7 +170,7 @@ function create_hugo() {
   git clone git@github.com:tigera/calico-cloud.git
   cd calico-cloud
   git filter-repo --to-subdirectory-filter calico-cloud/
-  hugo_fixup calico-cloud
+  hugo_fixup calico-cloud "Calico Cloud"
   merge hugo calico-cloud
 }
 
