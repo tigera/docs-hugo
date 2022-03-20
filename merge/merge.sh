@@ -81,6 +81,7 @@ function create_jekyll() {
 function hugo_fixup() {
   local name=$1
   local displayName=$2
+  local weight=$3
   # remove charts for now...
   git filter-repo --path $name/_includes/charts/ --invert-paths
   git filter-repo \
@@ -126,10 +127,13 @@ function hugo_fixup() {
 
   # make sure each top-level dir has an _index.md with cascading front-matter
   if [[ -f "./content/en/docs/$name/_index.md" ]]; then
-    perl -0777 -pi -e "s/^---\$(.*?)^---$/\n---\${1}cascade:\n  prodname: \"${displayName}\"\n---\n/gsm" "./content/en/docs/$name/_index.md"
+    perl -0777 -pi -e "s/^---\$(.*?)^---$/\n---\${1}cascade:\n  prodname: \"${displayName}\"\nweight: ${weight}\n---\n/gsm" "./content/en/docs/$name/_index.md"
   else
     cat >"./content/en/docs/$name/_index.md" <<EOF
 ---
+title: "${displayName}"
+description: "${displayName}"
+weight: ${weight}
 cascade:
   prodname: "${displayName}"
 ---
@@ -154,7 +158,7 @@ function create_hugo() {
   git clone git@github.com:projectcalico/calico.git
   cd calico
   git filter-repo --path calico/
-  hugo_fixup calico "Calico"
+  hugo_fixup calico "Calico" 10
   merge hugo calico
 
   # process enterprise
@@ -162,7 +166,7 @@ function create_hugo() {
   git clone git@github.com:tigera/calico-private.git calico-enterprise
   cd calico-enterprise
   git filter-repo --path calico/ --path-rename calico/:calico-enterprise/
-  hugo_fixup calico-enterprise "Calico Enterprise"
+  hugo_fixup calico-enterprise "Calico Enterprise" 20
   merge hugo calico-enterprise
 
   # process cloud
@@ -170,7 +174,7 @@ function create_hugo() {
   git clone git@github.com:tigera/calico-cloud.git
   cd calico-cloud
   git filter-repo --to-subdirectory-filter calico-cloud/
-  hugo_fixup calico-cloud "Calico Cloud"
+  hugo_fixup calico-cloud "Calico Cloud" 30
   merge hugo calico-cloud
 }
 
