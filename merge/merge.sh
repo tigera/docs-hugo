@@ -89,7 +89,7 @@ function hugo_fixup() {
     --path $name/_data/ \
     --path $name/_includes/ \
     --path-rename $name/_data/:data/$name/ \
-    --path-rename $name/_includes/:layouts/$name/ \
+    --path-rename $name/_includes/:layouts/partials/$name/ \
     --filename-callback '
   if filename is None:
     return filename
@@ -142,6 +142,7 @@ EOF
 
   find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*site\.prodname\s*\*\/}}/{{< param prodname >}}/g"
   find ./layouts -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*site\.prodname\s*\*\/}}/{{ .Params.prodname }}/g"
+  find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*partial\s+(.*?)\s*\*\/}}/{{ partial \1 }}/gs"
 
   git add .
   git commit -m "updating content for hugo"
