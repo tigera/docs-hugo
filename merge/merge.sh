@@ -87,8 +87,10 @@ function hugo_fixup() {
   git filter-repo \
     --path-glob "**/*.md" \
     --path $name/_data/ \
+    --path $name/images/ \
     --path $name/_includes/ \
     --path-rename $name/_data/:data/$name/ \
+    --path-rename $name/images/:static/images/$name/ \
     --path-rename $name/_includes/:layouts/partials/$name/ \
     --filename-callback '
   if filename is None:
@@ -105,16 +107,22 @@ function hugo_fixup() {
   else:
     return filename
   '
+
+  # convert all liquid includes to partials
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*include\s+\/(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*include\s+(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*include_cached\s+(.*?)\s*%}/{{ partial ${name}\/\1 . }}/g"
+
+  # convert all comments to comments in hugo
   find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*comment\s*%}(.*?){%\s*endcomment\s*%}/{{< comment >}}\${1}{{< \/comment >}}/gs"
   find ./layouts -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%\s*comment\s*%}(.*?){%\s*endcomment\s*%}/{{\/*\${1}*\/}}/gs"
 
+  # convert all liquid which strip whitespace to TODO comments
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%-(.*?)-%}/{{\/\* -TODO\[merge\]-: \1 \*\/}}/gs"
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%-(.*?)%}/{{\/\* -TODO\[merge\]: \1 \*\/}}/gs"
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{%(.*?)-%}/{{\/\* TODO\[merge\]-: \1 \*\/}}/gs"
 
+  # convert all go templates which strip whitespace to TODO comments
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{-(.*?)-}}/{{\/\* -TODO\[merge\]-: \1 \*\/}}/gs"
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{-(.*?)}}/{{\/\* -TODO\[merge\]: \1 \*\/}}/gs"
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{(.*?)-}}/{{\/\* TODO\[merge\]-: \1 \*\/}}/gs"
@@ -125,9 +133,9 @@ function hugo_fixup() {
   # convert illegal front-matter that hugo won't allow
   find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -pi -e "s/description:(.*?)\{\{\/\* TODO\[merge\]: site\.prodname \*\/}}/description:\${1}${displayName}/"
 
-  # make sure each top-level dir has an _index.md with cascading front-matter
+  # make sure each top-level dir has an _index.md with cascading front-matter - add prodname and weight
   if [[ -f "./content/en/docs/$name/_index.md" ]]; then
-    perl -0777 -pi -e "s/^---\$(.*?)^---$/\n---\${1}cascade:\n  prodname: \"${displayName}\"\nweight: ${weight}\n---\n/gsm" "./content/en/docs/$name/_index.md"
+    perl -0777 -pi -e "s/^---\$(.*?)^---\$/\n---\${1}weight: ${weight}\ncascade:\n  prodname: \"${displayName}\"\n---\n/gsm" "./content/en/docs/$name/_index.md"
   else
     cat >"./content/en/docs/$name/_index.md" <<EOF
 ---
@@ -140,9 +148,17 @@ cascade:
 EOF
   fi
 
+  # now start selectively converting our TODO comments to what works in hugo
+
+  # convert 'prodname'
   find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*site\.prodname\s*\*\/}}/{{< param prodname >}}/g"
   find ./layouts -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*site\.prodname\s*\*\/}}/{{ .Params.prodname }}/g"
+
+  # convert partials
   find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*partial\s+(.*?)\s*\*\/}}/{{ partial \1 }}/gs"
+
+  # convert images
+  find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*site\.baseurl\s*\*\/}}\/images\/([a-zA-Z0-9_\/\.\-]+?)/\/images\/${name}\/\${1}/gs"
 
   git add .
   git commit -m "updating content for hugo"
@@ -184,7 +200,7 @@ if [[ "$type" == "hugo" ]]; then
   create_hugo
   home
   cd ..
-  git remote remove hugo || true
+  git remote remove hugo &>/dev/null || true
   git remote add hugo merge/hugo
   git fetch hugo
   git merge --squash --allow-unrelated-histories --no-edit hugo/master
