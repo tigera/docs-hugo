@@ -78,19 +78,43 @@ function create_jekyll() {
   merge jekyll calico-cloud
 }
 
+function create_placeholder_index() {
+  local path=$1
+  local title=$2
+  mkdir -p "$path"
+  cat >"$path/_index.md" <<EOF
+---
+title: "${title}"
+description: "${title}"
+---
+EOF
+}
+
+function create_placeholder_yaml() {
+  local path=$1
+  local name=$2
+  mkdir -p "$path"
+  cat >"$path/$name" <<EOF
+description: "<PLACEHOLDER> This is a placeholder for future content"
+EOF
+}
+
 function hugo_fixup() {
   local name=$1
   local displayName=$2
   local weight=$3
   # remove charts for now...
   git filter-repo --path $name/_includes/charts/ --invert-paths
+
   git filter-repo \
     --path-glob "**/*.md" \
     --path $name/_data/ \
     --path $name/images/ \
+    --path $name/manifests/ \
     --path $name/_includes/ \
     --path-rename $name/_data/:data/$name/ \
     --path-rename $name/images/:static/images/$name/ \
+    --path-rename $name/manifests/:static/manifests/$name/ \
     --path-rename $name/_includes/:layouts/partials/$name/ \
     --filename-callback '
   if filename is None:
@@ -148,11 +172,17 @@ cascade:
 EOF
   fi
 
+  # add placeholders for missing pages
+  create_placeholder_index "./content/en/docs/$name/reference/installation/api" "<PLACEHOLDER> ${displayName} Installation API"
+
   # now start selectively converting our TODO comments to what works in hugo
 
   # convert 'prodname'
   find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*site\.prodname\s*\*\/}}/{{< param prodname >}}/g"
   find ./layouts -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*site\.prodname\s*\*\/}}/{{ .Params.prodname }}/g"
+
+  # remove page.description since the description is already displayed through the docsy theme
+  find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*page\.description\s*\*\/}}//g"
 
   # convert partials
   find ./content -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*partial\s+(.*?)\s*\*\/}}/{{ partial \1 }}/gs"
@@ -160,8 +190,9 @@ EOF
   # convert images
   find . -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\{\{\/\* TODO\[merge\]:\s*site\.baseurl\s*\*\/}}\/images\/([a-zA-Z0-9_\/\.\-]+?)/\/images\/${name}\/\${1}/gs"
 
-  git add .
-  git commit -m "updating content for hugo"
+  # convert links
+  find ./content -name "*.md" -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\[(.*?)\]\s*\(\s*\{\{\/\* TODO\[merge\]:\s*site\.baseurl\s*\*\/}}\/manifests(.*?)\s*\)/TODO[manifests]:[\${1}]({{\/* ref \"\/manifests\/${name}\${2}\" *\/}})/gs"
+  find ./content -name "*.md" -not -path '*/.*' -type f -print0 | xargs -0 perl -0777 -pi -e "s/\[(.*?)\]\s*\(\s*\{\{\/\* TODO\[merge\]:\s*site\.baseurl\s*\*\/}}(.*?)\s*\)/[\${1}]({{< ref \"\/docs\/${name}\${2}\" >}})/gs"
 }
 
 function create_hugo() {
@@ -176,6 +207,12 @@ function create_hugo() {
   cd calico
   git filter-repo --path calico/
   hugo_fixup calico "Calico" 10
+  #create_placeholder_yaml "./content/en/docs/calico/manifests" "calico-etcd.yaml"
+  create_placeholder_index "./content/en/docs/calico/getting-started/windows-calico/standard" "<PLACEHOLDER> This is a placeholder for future content"
+  # temporarily remove s link in the manifests to libcalico-go
+  git rm ./static/manifests/calico/ocp/crds/calico
+  git add .
+  git commit -m "updating content for hugo"
   merge hugo calico
 
   # process enterprise
@@ -184,6 +221,12 @@ function create_hugo() {
   cd calico-enterprise
   git filter-repo --path calico/ --path-rename calico/:calico-enterprise/
   hugo_fixup calico-enterprise "Calico Enterprise" 20
+  #create_placeholder_yaml "./content/en/docs/calico-enterprise/manifests" "fortinet-device-configmap.yaml"
+  #create_placeholder_yaml "./content/en/docs/calico-enterprise/manifests" "fortimanager-device-configmap.yaml"
+  # rename one index file back because it is referenced directly
+  git mv "./content/en/docs/calico-enterprise/getting-started/openshift/installation/_index.md" "./content/en/docs/calico-enterprise/getting-started/openshift/installation/index.md"
+  git add .
+  git commit -m "updating content for hugo"
   merge hugo calico-enterprise
 
   # process cloud
@@ -192,6 +235,10 @@ function create_hugo() {
   cd calico-cloud
   git filter-repo --to-subdirectory-filter calico-cloud/
   hugo_fixup calico-cloud "Calico Cloud" 30
+  #create_placeholder_yaml "./content/en/docs/calico-cloud/manifests" "fortinet-device-configmap.yaml"
+  #create_placeholder_yaml "./content/en/docs/calico-cloud/manifests" "fortimanager-device-configmap.yaml"
+  git add .
+  git commit -m "updating content for hugo"
   merge hugo calico-cloud
 }
 
