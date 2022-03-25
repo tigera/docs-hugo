@@ -110,11 +110,9 @@ function hugo_fixup() {
     --path-glob "**/*.md" \
     --path $name/_data/ \
     --path $name/images/ \
-    --path $name/manifests/ \
     --path $name/_includes/ \
     --path-rename $name/_data/:data/$name/ \
     --path-rename $name/images/:static/images/$name/ \
-    --path-rename $name/manifests/:static/manifests/$name/ \
     --path-rename $name/_includes/:layouts/partials/$name/ \
     --filename-callback '
   if filename is None:
@@ -210,7 +208,7 @@ function create_hugo() {
   #create_placeholder_yaml "./content/en/docs/calico/manifests" "calico-etcd.yaml"
   create_placeholder_index "./content/en/docs/calico/getting-started/windows-calico/standard" "<PLACEHOLDER> This is a placeholder for future content"
   # temporarily remove s link in the manifests to libcalico-go
-  git rm ./static/manifests/calico/ocp/crds/calico
+  # git rm ./static/manifests/calico/ocp/crds/calico
   git add .
   git commit -m "updating content for hugo"
   merge hugo calico
