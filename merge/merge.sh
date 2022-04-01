@@ -103,8 +103,17 @@ function hugo_fixup() {
   local name=$1
   local displayName=$2
   local weight=$3
-  # remove charts for now...
-  git filter-repo --path $name/_includes/charts/ --invert-paths
+
+  # first remove some files we don't want / need
+  git filter-repo \
+    --path $name/_includes/charts/ \
+    --path $name/AUTHORS.md \
+    --path $name/DOC_STYLE_GUIDE.md \
+    --path $name/CONTRIBUTING_MANIFESTS.md \
+    --path $name/README.md \
+    --path $name/releases.md \
+    --path $name/hack/ \
+    --invert-paths
 
   git filter-repo \
     --path-glob "**/*.md" \
