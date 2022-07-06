@@ -3,12 +3,13 @@
 ### NOTE ###
 # This Antora-specific script will be added to merge.sh once the kinks are ironed out
 # //TODO// #
-# * Move component image folders into modules/ROOT/
-# * Move component content folders into modules/ROOT/pages
-# * New function to create Antora navigation files
-# * Remove index.md files before ADOC conversion
+# * [X] Move component image folders into modules/ROOT/
+# * [X] Move component content folders into modules/ROOT/pages
+# * [] New function to create Antora navigation files
+# * [X] Remove index.md files before ADOC conversion (keeping some)
 # * MD to ADOC conversions
-# ** Troubleshoot grep expressions below (they're stopping the script with no error message)
+# ** [] Convert `link:{{ site.baseurl }}/reference/resources/node[Node resource]` to `link:reference/resources/node.adoc[Node resource]`
+# ** [] Troubleshoot grep expressions below (they're stopping the script with no error message)
 # **
 
 
@@ -20,7 +21,10 @@ SCRIPT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 echo "Directory variable set"
 
 # for troubleshooting builds
+
 rm -rf antora antora-demo calico calico-enterprise calico-cloud
+
+pwd > ~/tmp/bar.txt
 
 function home() {
     # Change directory to script location
@@ -252,14 +256,24 @@ function antora_fixup () {
     --path $name/.semaphore \
     --invert-paths
 
+  # Delete index.md files, but not all.
+  if [ "$name" == "calico" ]; then
+  mv calico/calico-enterprise/index.md calico/calico-enterprise/walrus.md
+  find . -type f -name "index.md" -delete
+  mv calico/calico-enterprise/walrus.md calico/calico-enterprise/index.md
+  else
+  find . -type f -name "index.md" -delete
+  fi
+
   # Move files to expected location in preparation for Antora merge.
   mkdir -p $name/modules/ROOT/pages
   mv $name/modules $name/.modules
   mv $name/* $name/.modules/ROOT/pages
   mv $name/.modules $name/modules
+
   # Move images to expected images location.
   mv $name/modules/ROOT/pages/images $name/modules/ROOT/
-  # exit N
+
   # Convert Markdown to Asciidoc
   find ./ -name "*.md" \
     -type f \
