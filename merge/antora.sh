@@ -227,6 +227,7 @@ function antora_fixup () {
     --path $name/LICENSE \
     --path $name/Gemfile \
     --path $name/_includes \
+    --path $name/.gitignore \
     --invert-paths
 
   git filter-repo \
@@ -248,24 +249,39 @@ function antora_fixup () {
     --path $name/manifests/ \
     --path $name/workload\
     --path $name/bin/ \
+    --path $name/.semaphore \
     --invert-paths
+
+  # Move files to expected location in preparation for Antora merge.
+  mkdir -p $name/modules/ROOT/pages
+  mv $name/modules $name/.modules
+  mv $name/* $name/.modules/ROOT/pages
+  mv $name/.modules $name/modules
+  # Move images to expected images location.
+  mv $name/modules/ROOT/pages/images $name/modules/ROOT/
   # exit N
   # Convert Markdown to Asciidoc
-  #find ./ -name "*.md" \
-    #-type f \
-    #-exec sh -c \
-    #'kramdoc --format=GFM \
-        #--wrap=ventilate \
-        #--output={}.adoc {}' \;
+  find ./ -name "*.md" \
+    -type f \
+    -exec sh -c \
+    'kramdoc --format=GFM \
+        --wrap=ventilate \
+        --output={}.adoc {}' \;
   # Rename converted files to .adoc and remove .md files.
-find . -type f -name "*.md.adoc" | rename -s .md.adoc .adoc
-find . -type f -name "*.md" -delete
-grep -rl {{site.prodname}}  . | xargs sed -i "" -e 's/{{site.prodname}}/{product-name}/g'
+  find . -type f -name "*.md.adoc" | rename -s .md.adoc .adoc
+  find . -type f -name "*.md" -delete
+  grep -rl {{site.prodname}}  . | xargs sed -i "" -e 's/{{site.prodname}}/{product-name}/g'
+  #exit N
 # These grep lines mysteriously stop the script with no error. //TODO//
 #grep -rl "=== " . | xargs sed -i "" -e 's/=== /== /g'
 #grep -rl "==== " . | xargs sed -i "" -e 's/==== /=== /g'
 #grep -rl "===== " . | xargs sed -i "" -e 's/===== /==== /g'
+
+    # Move images to expected Antora directory.
+    # mv -R $SCRIPT_DIR/antora/calico/modules/ROOT/images/* $SCRIPT_DIR/antora/calico/modules/ROOT/images
+
 }
+
 
 function create_antora() {
   # create unified antora repository
@@ -282,7 +298,6 @@ function create_antora() {
   cd calico
   git filter-repo --path calico/
   antora_fixup calico
-  git filter-repo --path calico/
   #cd calico
   #mkdir -p $SCRIPT_DIR/calico/calico/modules/ROOT/pages
   #cp -R $SCRIPT_DIR/calico/calico/* $SCRIPT_DIR/calico/calico/modules/ROOT/pages/
