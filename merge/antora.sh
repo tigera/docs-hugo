@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ### NOTE ###
 # This Antora-specific script will be added to merge.sh once the kinks are ironed out
@@ -273,6 +273,11 @@ function antora_fixup () {
 
   # Move images to expected images location.
   mv $name/modules/ROOT/pages/images $name/modules/ROOT/
+  # Fix heading nonsense
+  # //TODO// Might benefit from a logic that checks whether a file goes from one # to three ###, then continutes.
+  egrep -rl "^#{3}[[:space:]]" . | xargs sed -r -i '' -e 's/^#{3}[[:space:]]/## /g'
+  egrep -rl "^#{4}[[:space:]]" . | xargs sed -r -i '' -e 's/^#{4}[[:space:]]/### /g'
+  egrep -rl "^#{5}[[:space:]]" . | xargs sed -r -i '' -e 's/^3{5}[[:space:]]/#### /g'
 
   # Convert Markdown to Asciidoc
   find ./ -name "*.md" \
@@ -284,16 +289,18 @@ function antora_fixup () {
   # Rename converted files to .adoc and remove .md files.
   find . -type f -name "*.md.adoc" | rename -s .md.adoc .adoc
   find . -type f -name "*.md" -delete
-  grep -rl {{site.prodname}}  . | xargs sed -i "" -e 's/{{site.prodname}}/{product-name}/g'
+  grep -rl '{{site.prodname}}' . | xargs sed -i "" -e 's/{{site.prodname}}/{product-name}/g'
   #exit N
 # These grep lines mysteriously stop the script with no error. //TODO//
 #grep -rl "=== " . | xargs sed -i "" -e 's/=== /== /g'
 #grep -rl "==== " . | xargs sed -i "" -e 's/==== /=== /g'
 #grep -rl "===== " . | xargs sed -i "" -e 's/===== /==== /g'
-
+  # Fix heading nonsense
+  # egrep -rl "^={3}\s" . | xargs sed r -i '' -e 's/^={3}\s/== /g'
+  # egrep -rl "^={4}\s" . | xargs sed -i '' -e 's/^={4}\s/=== /g'
+  # egrep -rl "^={5}\s" . | xargs sed -i '' -e 's/^={5}\s/==== /g'
     # Move images to expected Antora directory.
     # mv -R $SCRIPT_DIR/antora/calico/modules/ROOT/images/* $SCRIPT_DIR/antora/calico/modules/ROOT/images
-
 }
 
 
